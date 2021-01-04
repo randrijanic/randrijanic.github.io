@@ -2,4 +2,4 @@
 
 Ovdje će se nalaziti HTML/CSS a možda i Jacascript
 
-Adresa web stranice jest https//:randrijanic.github.io
+Adresa web stranice jest https://randrijanic.github.io
