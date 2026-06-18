@@ -1,1 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robert Andrijanić</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #21262d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: rgba(13,17,23,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2rem;
+      height: 56px;
+    }
+    .nav-logo {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+    }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 2rem 4rem;
+      text-align: center;
+    }
+    .hero-inner { max-width: 640px; }
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .hero .role {
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .hero .bio {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 480px;
+      margin: 0 auto 2rem;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--accent);
+      color: #0d1117;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .hero-cta:hover { opacity: 0.85; }
+
+    /* SECTIONS */
+    section {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+    }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      color: var(--text);
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* SKILLS */
+    .skill-group { margin-bottom: 2rem; }
+    .skill-group-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .badge:hover { border-color: var(--accent); }
+    .badge .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .blue   { background: #58a6ff; }
+    .orange { background: #f0883e; }
+    .green  { background: #3fb950; }
+    .red    { background: #f85149; }
+    .yellow { background: #e3b341; }
+    .purple { background: #a371f7; }
+    .gray   { background: #8b949e; }
+
+    /* CONTACT */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .contact-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.2s, transform 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .contact-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .contact-icon { font-size: 1.4rem; }
+    .contact-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .contact-value { font-size: 0.9rem; font-weight: 500; }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 480px) {
+      nav { padding: 0 1rem; }
+      .nav-links { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="nav-logo">randrijanic</a>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#skills">Skills</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero" id="about">
+    <div class="hero-inner">
+      <img
+        src="https://avatars.githubusercontent.com/u/76013384?v=4"
+        alt="Robert Andrijanić"
+        class="avatar"
+      />
+      <h1>Robert Andrijanić</h1>
+      <p class="role">IT Systems Administrator · Enikon Aerospace</p>
+      <p class="bio">
+        Sysadmin based in Zagreb, Croatia. Managing infrastructure,
+        networks, and systems — keeping everything running smoothly
+        so the team can focus on building.
+      </p>
+      <a href="#contact" class="hero-cta">Get in touch</a>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <p class="section-label">What I work with</p>
+    <h2>Tech Stack</h2>
+
+    <div class="skill-group">
+      <p class="skill-group-title">Operating Systems &amp; Servers</p>
+      <div class="badges">
+        <span class="badge"><span class="dot blue"></span>Windows Server</span>
+        <span class="badge"><span class="dot yellow"></span>Linux</span>
+        <span class="badge"><span class="dot orange"></span>Ubuntu</span>
+      </div>
+    </div>
+
+    <div class="skill-group">
+      <p class="skill-group-title">Scripting &amp; Automation</p>
+      <div class="badges">
+        <span class="badge"><span class="dot blue"></span>PowerShell</span>
+        <span class="badge"><span class="dot green"></span>Bash</span>
+      </div>
+    </div>
+
+    <div class="skill-group">
+      <p class="skill-group-title">Networking &amp; Security</p>
+      <div class="badges">
+        <span class="badge"><span class="dot orange"></span>Firewall Management</span>
+        <span class="badge"><span class="dot red"></span>Trend Micro</span>
+        <span class="badge"><span class="dot gray"></span>VPN</span>
+        <span class="badge"><span class="dot gray"></span>Network Infrastructure</span>
+      </div>
+    </div>
+
+    <div class="skill-group">
+      <p class="skill-group-title">Cloud &amp; Productivity</p>
+      <div class="badges">
+        <span class="badge"><span class="dot orange"></span>Microsoft 365</span>
+        <span class="badge"><span class="dot blue"></span>Azure AD / Entra ID</span>
+      </div>
+    </div>
+
+    <div class="skill-group">
+      <p class="skill-group-title">Hardware</p>
+      <div class="badges">
+        <span class="badge"><span class="dot green"></span>NVIDIA</span>
+        <span class="badge"><span class="dot red"></span>AMD</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <p class="section-label">Reach out</p>
+    <h2>Contact</h2>
+    <div class="contact-grid">
+      <a href="mailto:sysadmin@enikonaerospace.com" class="contact-card">
+        <span class="contact-icon">✉️</span>
+        <div>
+          <p class="contact-label">Email</p>
+          <p class="contact-value">sysadmin@enikonaerospace.com</p>
+        </div>
+      </a>
+      <a href="https://github.com/randrijanic" target="_blank" rel="noopener" class="contact-card">
+        <span class="contact-icon">🐙</span>
+        <div>
+          <p class="contact-label">GitHub</p>
+          <p class="contact-value">@randrijanic</p>
+        </div>
+      </a>
+      <div class="contact-card" style="cursor:default;">
+        <span class="contact-icon">📍</span>
+        <div>
+          <p class="contact-label">Location</p>
+          <p class="contact-value">Zagreb, Croatia</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 Robert Andrijanić &nbsp;·&nbsp; Zagreb, Croatia
+  </footer>
+
+</body>
+</html>
