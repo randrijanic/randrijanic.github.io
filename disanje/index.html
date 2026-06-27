@@ -344,6 +344,44 @@
 
     .stat-box .val { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
     .stat-box .lbl { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+
+    /* ── CHARTS ── */
+    .chart-wrap {
+      width: 100%;
+      max-width: 360px;
+      background: var(--surface);
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .chart-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    canvas.chart-canvas {
+      width: 100%;
+      height: 120px;
+      display: block;
+    }
+
+    .progress-chart-wrap {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid #1e293b;
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .progress-chart-wrap canvas {
+      width: 100%;
+      height: 140px;
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -418,6 +456,10 @@
     <h2 style="font-size:1.1rem">Prethodne sesije</h2>
     <button class="clear-btn" id="clearHistoryBtn">Obriši sve</button>
   </div>
+  <div class="progress-chart-wrap" id="progressChartWrap" style="display:none">
+    <p class="chart-title">Napredak — max. zadržavanje (sek)</p>
+    <canvas id="progressChart" height="140"></canvas>
+  </div>
   <div class="history-list" id="historyList"></div>
 </section>
 
@@ -426,6 +468,10 @@
   <h2>Sesija zavrsena!</h2>
   <p>Odlicno si odradio Wim Hof sesiju.<br>Tijelo zahvaljuje.</p>
   <div class="stats-grid" id="overlayStats"></div>
+  <div class="chart-wrap" id="overlayChartWrap" style="display:none">
+    <p class="chart-title">Zadržavanje po rundi (sek)</p>
+    <canvas class="chart-canvas" id="overlayChart" height="120"></canvas>
+  </div>
   <button class="btn btn-primary" id="overlayClose">Nova sesija</button>
 </div>
 
@@ -707,6 +753,7 @@ function finishSession() {
   `;
 
   overlay.classList.add('show');
+  showOverlayChart([...state.holdTimes]);
   setUI('idle');
 }
 
@@ -815,8 +862,10 @@ function renderHistory() {
   const history = getHistory();
   if (!history.length) {
     list.innerHTML = '<p class="empty-state">Nema zavrsenih sesija.</p>';
+    $('progressChartWrap').style.display = 'none';
     return;
   }
+  showProgressChart(history);
   list.innerHTML = history.map(s => {
     const d = new Date(s.date);
     const dateStr = d.toLocaleDateString('hr-HR', { weekday:'short', day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -840,6 +889,186 @@ $('clearHistoryBtn').addEventListener('click', () => {
   localStorage.removeItem('wh_history');
   renderHistory();
 });
+
+// ── CHARTS ───────────────────────────────────────────────────────
+
+function drawBarChart(canvasId, values, labels, color) {
+  const canvas = $(canvasId);
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width  || canvas.offsetWidth  || 300;
+  const H = rect.height || canvas.offsetHeight || 120;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const padL = 36, padR = 8, padT = 12, padB = 24;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const max = Math.max(...values, 1);
+  const barCount = values.length;
+  const gap = 8;
+  const barW = Math.max(4, (chartW - gap * (barCount - 1)) / barCount);
+
+  // Grid lines
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + chartH - (chartH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + chartW, y);
+    ctx.stroke();
+  }
+
+  // Y-axis labels
+  ctx.fillStyle = '#475569';
+  ctx.font = `${10 * (1 / dpr * dpr)}px Plus Jakarta Sans, system-ui`;
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const val = Math.round((max / 4) * i);
+    const y   = padT + chartH - (chartH / 4) * i;
+    ctx.fillText(val, padL - 4, y + 3);
+  }
+
+  // Bars
+  values.forEach((v, i) => {
+    const barH = (v / max) * chartH;
+    const x = padL + i * (barW + gap);
+    const y = padT + chartH - barH;
+
+    // Gradient
+    const grad = ctx.createLinearGradient(0, y, 0, padT + chartH);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, color + '44');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+    ctx.fill();
+
+    // Value label on top
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.font = '10px Plus Jakarta Sans, system-ui';
+    ctx.fillText(formatTime(Math.round(v)), x + barW / 2, y - 3);
+
+    // X label
+    if (labels && labels[i]) {
+      ctx.fillStyle = '#475569';
+      ctx.fillText(labels[i], x + barW / 2, padT + chartH + 14);
+    }
+  });
+}
+
+function drawLineChart(canvasId, values, labels) {
+  const canvas = $(canvasId);
+  if (!canvas || values.length < 2) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width  || canvas.offsetWidth  || 300;
+  const H = rect.height || canvas.offsetHeight || 140;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const padL = 36, padR = 8, padT = 12, padB = 24;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const max = Math.max(...values, 1);
+  const n   = values.length;
+
+  // Grid
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + chartH - (chartH / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + chartW, y);
+    ctx.stroke();
+  }
+
+  // Y labels
+  ctx.fillStyle = '#475569';
+  ctx.textAlign = 'right';
+  ctx.font = '10px Plus Jakarta Sans, system-ui';
+  for (let i = 0; i <= 4; i++) {
+    const val = Math.round((max / 4) * i);
+    const y   = padT + chartH - (chartH / 4) * i;
+    ctx.fillText(val, padL - 4, y + 3);
+  }
+
+  const pts = values.map((v, i) => ({
+    x: padL + (i / (n - 1)) * chartW,
+    y: padT + chartH - (v / max) * chartH,
+  }));
+
+  // Area fill
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+  grad.addColorStop(0, '#818cf844');
+  grad.addColorStop(1, '#818cf800');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, padT + chartH);
+  pts.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(pts[pts.length - 1].x, padT + chartH);
+  ctx.closePath();
+  ctx.fill();
+
+  // Line
+  ctx.strokeStyle = '#818cf8';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+
+  // Dots + labels
+  pts.forEach((p, i) => {
+    ctx.fillStyle = '#818cf8';
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.font = '9px Plus Jakarta Sans, system-ui';
+    ctx.fillText(formatTime(Math.round(values[i])), p.x, p.y - 7);
+
+    if (labels && labels[i]) {
+      ctx.fillStyle = '#475569';
+      ctx.fillText(labels[i], p.x, padT + chartH + 14);
+    }
+  });
+}
+
+function showOverlayChart(holdTimes) {
+  const wrap = $('overlayChartWrap');
+  if (!holdTimes || holdTimes.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const labels = holdTimes.map((_, i) => `R${i + 1}`);
+  // Defer draw until the canvas is visible and has layout
+  requestAnimationFrame(() => drawBarChart('overlayChart', holdTimes, labels, '#38bdf8'));
+}
+
+function showProgressChart(history) {
+  const wrap = $('progressChartWrap');
+  if (!history || history.length < 2) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  // Show last 10 sessions, oldest → newest
+  const slice  = history.slice(0, 10).reverse();
+  const values = slice.map(s => s.maxHold || 0);
+  const labels = slice.map(s => {
+    const d = new Date(s.date);
+    return `${d.getDate()}.${d.getMonth() + 1}.`;
+  });
+  requestAnimationFrame(() => drawLineChart('progressChart', values, labels));
+}
 </script>
 
 <footer style="width:100%;display:flex;flex-direction:column;align-items:center;padding:40px 16px 48px;gap:16px;border-top:1px solid #1e293b;margin-top:16px;">
