@@ -203,7 +203,14 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
-    .contact-value { font-size: 0.9rem; font-weight: 500; }
+    .contact-value {
+      font-size: 0.9rem;
+      font-weight: 500;
+      overflow-wrap: break-word;
+      word-break: break-all;
+      min-width: 0;
+    }
+    .contact-card > div { min-width: 0; }
 
     /* FOOTER */
     footer {
@@ -217,6 +224,37 @@
     @media (max-width: 480px) {
       nav { padding: 0 1rem; }
       .nav-links { gap: 1rem; }
+    }
+
+    /* SCROLL ANIMATIONS */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.08s; }
+    .reveal-delay-2 { transition-delay: 0.16s; }
+    .reveal-delay-3 { transition-delay: 0.24s; }
+    .reveal-delay-4 { transition-delay: 0.32s; }
+    .reveal-delay-5 { transition-delay: 0.40s; }
+
+    /* HERO animate on load */
+    .hero-inner > * {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: heroIn 0.6s ease forwards;
+    }
+    .hero-inner > *:nth-child(1) { animation-delay: 0.1s; }
+    .hero-inner > *:nth-child(2) { animation-delay: 0.2s; }
+    .hero-inner > *:nth-child(3) { animation-delay: 0.3s; }
+    .hero-inner > *:nth-child(4) { animation-delay: 0.4s; }
+    .hero-inner > *:nth-child(5) { animation-delay: 0.5s; }
+    @keyframes heroIn {
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -254,19 +292,18 @@
 
   <!-- SKILLS -->
   <section id="skills">
-    <p class="section-label">What I work with</p>
-    <h2>Tech Stack</h2>
+    <p class="section-label reveal">What I work with</p>
+    <h2 class="reveal reveal-delay-1">Tech Stack</h2>
 
-    <div class="skill-group">
+    <div class="skill-group reveal reveal-delay-2">
       <p class="skill-group-title">Operating Systems &amp; Servers</p>
       <div class="badges">
         <span class="badge"><span class="dot blue"></span>Windows Server</span>
         <span class="badge"><span class="dot yellow"></span>Linux</span>
-        <span class="badge"><span class="dot orange"></span>Ubuntu</span>
       </div>
     </div>
 
-    <div class="skill-group">
+    <div class="skill-group reveal reveal-delay-3">
       <p class="skill-group-title">Scripting &amp; Automation</p>
       <div class="badges">
         <span class="badge"><span class="dot blue"></span>PowerShell</span>
@@ -274,17 +311,15 @@
       </div>
     </div>
 
-    <div class="skill-group">
+    <div class="skill-group reveal reveal-delay-4">
       <p class="skill-group-title">Networking &amp; Security</p>
       <div class="badges">
-        <span class="badge"><span class="dot orange"></span>Firewall Management</span>
         <span class="badge"><span class="dot red"></span>Trend Micro</span>
-        <span class="badge"><span class="dot gray"></span>VPN</span>
-        <span class="badge"><span class="dot gray"></span>Network Infrastructure</span>
+        <span class="badge"><span class="dot blue"></span>BitDefender</span>
       </div>
     </div>
 
-    <div class="skill-group">
+    <div class="skill-group reveal reveal-delay-5">
       <p class="skill-group-title">Cloud &amp; Productivity</p>
       <div class="badges">
         <span class="badge"><span class="dot orange"></span>Microsoft 365</span>
@@ -292,37 +327,30 @@
       </div>
     </div>
 
-    <div class="skill-group">
-      <p class="skill-group-title">Hardware</p>
-      <div class="badges">
-        <span class="badge"><span class="dot green"></span>NVIDIA</span>
-        <span class="badge"><span class="dot red"></span>AMD</span>
-      </div>
-    </div>
   </section>
 
   <hr class="divider" />
 
   <!-- CONTACT -->
   <section id="contact">
-    <p class="section-label">Reach out</p>
-    <h2>Contact</h2>
+    <p class="section-label reveal">Reach out</p>
+    <h2 class="reveal reveal-delay-1">Contact</h2>
     <div class="contact-grid">
-      <a href="mailto:sysadmin@enikonaerospace.com" class="contact-card">
+      <a href="mailto:sysadmin@enikonaerospace.com" class="contact-card reveal reveal-delay-2">
         <span class="contact-icon">✉️</span>
         <div>
           <p class="contact-label">Email</p>
           <p class="contact-value">sysadmin@enikonaerospace.com</p>
         </div>
       </a>
-      <a href="https://github.com/randrijanic" target="_blank" rel="noopener" class="contact-card">
+      <a href="https://github.com/randrijanic" target="_blank" rel="noopener" class="contact-card reveal reveal-delay-3">
         <span class="contact-icon">🐙</span>
         <div>
           <p class="contact-label">GitHub</p>
           <p class="contact-value">@randrijanic</p>
         </div>
       </a>
-      <div class="contact-card" style="cursor:default;">
+      <div class="contact-card reveal reveal-delay-4" style="cursor:default;">
         <span class="contact-icon">📍</span>
         <div>
           <p class="contact-label">Location</p>
@@ -335,6 +363,14 @@
   <footer>
     © 2026 Robert Andrijanić &nbsp;·&nbsp; Zagreb, Croatia
   </footer>
+
+  <script>
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } }),
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
 
 </body>
 </html>
